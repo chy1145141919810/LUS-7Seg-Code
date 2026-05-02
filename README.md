@@ -31,10 +31,9 @@ We provide comprehensive baselines for both standard plane classification and an
 | nnU-Net v2 | Gallbladder | 0.7583 | 10.0411 |
 
 ## Dataset
-To strictly maintain the integrity of the double-blind peer review process, the full **LUS-7Seg dataset** has been securely reserved on Mendeley Data and will be fully accessible upon official publication. 
+The complete **LUS-7Seg dataset** is publicly hosted and available for download on Mendeley Data.
 
-🔗 **Reserved Mendeley Data DOI:** `10.17632/cwc37g672d.1` 
-*(Note: This DOI link is currently inactive to preserve anonymity and will be activated immediately post-acceptance).*
+🔗 **Dataset Download:** [Mendeley Data (DOI: 10.17632/cwc37g672d.1)](https://doi.org/10.17632/cwc37g672d.1)
 
 For detailed information regarding dataset acquisition, preprocessing, and hierarchical directory organization, please refer to **Section 3** of the main manuscript.
 
