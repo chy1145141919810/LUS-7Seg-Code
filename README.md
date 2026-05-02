@@ -184,8 +184,8 @@ The analysis uses the **correctly predicted** test samples to compute spatial ov
 
 ## License
 
-The code is released under the [MIT License](LICENSE).
-The dataset itself is distributed under a separate data use agreement (to be announced upon public release).
+The codebase is released under the [MIT License](LICENSE). 
+The LUS-7Seg dataset is distributed under the [Creative Commons Attribution 4.0 International (CC BY 4.0) License](https://creativecommons.org/licenses/by/4.0/). You are free to share and adapt the dataset, provided you give appropriate credit by citing our paper.
 
 ## Citation
 
