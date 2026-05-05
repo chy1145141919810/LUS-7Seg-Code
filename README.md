@@ -15,12 +15,14 @@ Official code repository for the paper **"LUS-7Seg: A Multi-Annotation Dataset a
 
 We provide comprehensive baselines for both standard plane classification and anatomical segmentation.
 
-**Classification (Test Set)**
+**Classification (Test Set with 95% CI)**
 | Architecture | Accuracy | Macro F1 | AUC-ROC |
 | :--- | :--- | :--- | :--- |
-| ResNet50 | 0.9045 | 0.8931 | 0.9807 |
-| ViT-B/16 | 0.9040 | 0.8952 | 0.9881 |
-| DenseNet121 | 0.9088 | 0.8962 | 0.9828 |
+| ResNet50 | 0.9045 [0.892, 0.917] | 0.8931 [0.878, 0.907] | 0.9807 [0.976, 0.985] |
+| ViT-B/16 | 0.9040 [0.892, 0.916] | 0.8952 [0.881, 0.908] | 0.9881 [0.985, 0.991] |
+| DenseNet121 | **0.9088** [0.896, 0.921] | **0.8962** [0.881, 0.909] | 0.9828 [0.978, 0.987] |
+
+*Note: McNemar's test indicates no statistically significant difference in overall accuracy among the three models (p > 0.05), demonstrating the robust inter-class separability of the LUS-7Seg dataset regardless of the specific architecture.*
 
 **Segmentation (Original Resolution)**
 | Architecture | Class | Mean Dice | Mean HD95 (px) |
@@ -67,15 +69,38 @@ Set the environment variable `LUS7SEG_DATA` to point to your `data/` directory.
 
 ```text
 .
-├── DenseNet/ # Classification with DenseNet121
 ├── ResNet50/ # Classification with ResNet50
+│   ├── stats_test.py  # Script for McNemar's statistical significance testing
+│   ├── config.py
+│   ├── dataset.py
+│   ├── evaluate.py
+│   ├── model.py
+│   └── train.py
+├── DenseNet/ # Classification with DenseNet121
+│   ├── config.py
+│   ├── dataset.py
+│   ├── evaluate.py
+│   ├── model.py
+│   └── train.py
 ├── ViT/ # Classification with ViT-B/16
+│   ├── config.py
+│   ├── dataset.py
+│   ├── evaluate.py
+│   ├── model.py
+│   └── train.py
 ├── UNet/ # Segmentation with ResNet50-U-Net
+│   ├── config.py
+│   ├── dataset.py
+│   ├── evaluate.py
+│   ├── model.py
+│   └── train.py
 ├── nnUNet/ # Segmentation with nnU-Net v2 (format conversion + evaluation)
+│   ├── convert_to_nnunet.py
+│   └── evaluate.py
 ├── explain/ # CAM-based interpretability analysis (all three classifiers)
 │   ├── cam_utils.py
 │   ├── config.py
-│   ├── datasets.py
+│   ├── dataset.py
 │   ├── metrics.py
 │   ├── resnet_analysis.py
 │   ├── densenet_analysis.py
@@ -115,18 +140,29 @@ You can export them in your shell or modify the defaults in the respective `conf
 
 ## Quick Start
 
-### 1. Classification
+### 1. Classification & Statistical Testing
 
 Each classifier has its own folder. To train and evaluate, for example, DenseNet121:
 
 ```bash
 cd DenseNet
 python train.py      # trains the model, saves best checkpoint
-python evaluate.py   # prints metrics, saves confusion matrix
+python evaluate.py   # prints metrics with 95% CIs, saves confusion matrix and predictions.csv
 ```
 
 Replace `DenseNet`, `ResNet50` or `ViT` for the other architectures.
 **Note:** All classification experiments use the **same patient-level split** (70-10-20) with seed 42.
+
+**Statistical Significance Testing:**
+Once you have evaluated all three models and generated their respective prediction CSV files, you can run McNemar's test to calculate the p-values between them:
+
+```bash
+cd ResNet50
+# Ensure resnet50_predictions.csv, densenet121_predictions.csv, and vitb16_predictions.csv are in the same directory
+python stats_test.py
+```
+
+**Note:** The script outputs the p-values for each pair of models. A p-value of 0.05 or lower indicates a statistically significant difference.**
 
 ### 2. Segmentation – U-Net (ResNet50 encoder)
 
