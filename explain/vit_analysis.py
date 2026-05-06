@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import torchvision.models as models
 import torch.nn as nn
 from dataset import get_data_loaders
-from metrics import binarize_heatmap_otsu, binarize_heatmap_threshold, calculate_alignment_iou
+from metrics import binarize_heatmap_otsu, binarize_heatmap_threshold, calculate_alignment_iou, generate_random_mask, generate_center_mask
 from cam_utils import VITAttentionRollout, get_vit_cams_multi
 from config import VIT_WEIGHT_PATH, SAVE_DIR_VIT
 
@@ -34,6 +34,10 @@ def run_vit_interpretability():
 
     threshold_ious = {m: {t: [] for t in thresholds} for m in methods}
 
+    # baseline IoU
+    baseline_random_ious = []
+    baseline_center_ious = []
+
     # 3. Traverse the test set.
     for images, labels, gt_masks, img_paths in test_loader:
         images = images.to(device)
@@ -52,7 +56,14 @@ def run_vit_interpretability():
             img_tensor = images[i:i+1] 
             true_class = labels[i].item()
             gt_mask_img = gt_masks[i].numpy() 
+
+            # Calculate baseline IoU for random and center masks
+            random_mask = generate_random_mask(gt_mask_img)
+            center_mask = generate_center_mask(gt_mask_img)
             
+            baseline_random_ious.append(calculate_alignment_iou(random_mask, gt_mask_img))
+            baseline_center_ious.append(calculate_alignment_iou(center_mask, gt_mask_img))
+
             rollout_map = rollout(img_tensor, start_layer=0)
             
             cam_maps = get_vit_cams_multi(model, img_tensor, true_class)
@@ -71,6 +82,10 @@ def run_vit_interpretability():
 
     os.makedirs(SAVE_DIR_VIT, exist_ok=True)
 
+    # Aggregate baseline IoUs
+    avg_random_iou = np.mean(baseline_random_ious) if baseline_random_ious else 0.0
+    avg_center_iou = np.mean(baseline_center_ious) if baseline_center_ious else 0.0
+
     # ---------------------------------------------------------
     # Multi-threshold IoU sensitivity line chart.
     # ---------------------------------------------------------
@@ -87,6 +102,11 @@ def run_vit_interpretability():
                  marker='o', markersize=12, linewidth=4, 
                  label=m_name, 
                  color=modern_colors[idx % len(modern_colors)])
+
+    plt.axhline(y=avg_random_iou, color='gray', linestyle='--', linewidth=3, 
+                label=f'Random Baseline ({avg_random_iou:.3f})')
+    plt.axhline(y=avg_center_iou, color='#333333', linestyle='-.', linewidth=3, 
+                label=f'Center Baseline ({avg_center_iou:.3f})')
         
     plt.title("ViT-B/16", fontsize=28, pad=20, weight='bold')
     plt.xlabel("Binarization Threshold", fontsize=24, labelpad=15, weight='bold')

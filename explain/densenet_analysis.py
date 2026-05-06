@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import torchvision.models as models
 import torch.nn as nn
 from dataset import get_data_loaders
-from metrics import binarize_heatmap_otsu, binarize_heatmap_threshold, calculate_alignment_iou
+from metrics import binarize_heatmap_otsu, binarize_heatmap_threshold, calculate_alignment_iou, generate_random_mask, generate_center_mask
 from cam_utils import get_all_cams
 from torchvision import transforms
 from config import DENSENET_WEIGHT_PATH, SAVE_DIR_DENSENET, CAM_METHODS
@@ -38,6 +38,9 @@ def run_interpretability_analysis():
     thresholds = np.arange(0.1, 1.0, 0.1)
     threshold_ious = {method: {t: [] for t in thresholds} for method in CAM_METHODS}
 
+    # baseline IoU
+    baseline_random_ious = []
+    baseline_center_ious = []
     
     # 2. Traverse the test set.
     for images, labels, gt_masks, img_paths in test_loader:
@@ -57,7 +60,14 @@ def run_interpretability_analysis():
             img_tensor = images[i].unsqueeze(0)
             true_class = labels[i].item()
             gt_mask_img = gt_masks[i].numpy() 
+
+            # Calculate baseline IoU for random and center masks
+            random_mask = generate_random_mask(gt_mask_img)
+            center_mask = generate_center_mask(gt_mask_img)
             
+            baseline_random_ious.append(calculate_alignment_iou(random_mask, gt_mask_img))
+            baseline_center_ious.append(calculate_alignment_iou(center_mask, gt_mask_img))
+
             # 3. Batch extract 4 types of heatmaps.
             heatmaps_dict = get_all_cams(model, img_tensor, true_class, target_layers)
             
@@ -72,6 +82,10 @@ def run_interpretability_analysis():
 
     os.makedirs(SAVE_DIR_DENSENET, exist_ok=True)
 
+    # Aggregate baseline IoUs
+    avg_random_iou = np.mean(baseline_random_ious) if baseline_random_ious else 0.0
+    avg_center_iou = np.mean(baseline_center_ious) if baseline_center_ious else 0.0
+
     # ---------------------------------------------------------
     # Multi-threshold IoU sensitivity line chart.
     # ---------------------------------------------------------
@@ -84,6 +98,11 @@ def run_interpretability_analysis():
         plt.plot(thresholds, avg_ious_per_t, marker='o', markersize=12, linewidth=4, 
                  label=method, color=modern_colors[idx % len(modern_colors)])
         
+    plt.axhline(y=avg_random_iou, color='gray', linestyle='--', linewidth=3, 
+                label=f'Random Baseline ({avg_random_iou:.3f})')
+    plt.axhline(y=avg_center_iou, color='#333333', linestyle='-.', linewidth=3, 
+                label=f'Center Baseline ({avg_center_iou:.3f})')
+
     plt.title("DenseNet121", fontsize=28, pad=20, weight='bold')
     plt.xlabel("Binarization Threshold", fontsize=24, labelpad=15, weight='bold')
     plt.ylabel("Alignment IoU", fontsize=24, labelpad=15, weight='bold')
