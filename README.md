@@ -215,7 +215,7 @@ python vit_analysis.py
 ```
 
 Each script generates a multi-threshold Alignment IoU curve (`iou_threshold_curve.png`) inside `explain_results/<model>_results/`.
-The analysis uses the **correctly predicted** test samples to compute spatial overlap between CAM heatmaps and the expert masks.
+The analysis uses the **correctly predicted** test samples to compute spatial overlap between CAM heatmaps and the expert masks, and plots horizontal reference lines for pure Random and clinical Center-Bias spatial baselines.
 
 
 ## License
