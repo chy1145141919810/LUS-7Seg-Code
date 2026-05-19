@@ -110,8 +110,8 @@ Set the environment variable `LUS7SEG_DATA` to point to your `data/` directory.
 
 ## Installation
 ```bash
-git clone https://github.com/[Your GitHub Username]/LUS-7Seg.git
-cd LUS-7Seg
+git clone https://github.com/chy1145141919810/LUS-7Seg-Code.git
+cd LUS-7Seg-Code
 pip install -r requirements.txt
 ```
 
